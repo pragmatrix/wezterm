@@ -542,7 +542,7 @@ impl Window {
             // better than creating them all centered which is what we used
             // to do here.
             thread_local! {
-                static LAST_POSITION: RefCell<Option<NSPoint>> = RefCell::new(None);
+                static LAST_POSITION: RefCell<Option<NSPoint>> = const { RefCell::new(None) };
             }
 
             let frame = NSWindow::frame(*window);
@@ -583,7 +583,7 @@ impl Window {
                 last_pos.borrow_mut().replace(next_pos);
             });
 
-            window.setTitle_(*nsstring(&name));
+            window.setTitle_(*nsstring(name));
             window.setAcceptsMouseMovedEvents_(YES);
 
             let view = WindowView::alloc(&inner)?;
@@ -1317,10 +1317,8 @@ impl WindowInner {
             if !self.exit_simple_fullscreen() {
                 self.toggle_native_fullscreen();
             }
-        } else {
-            if !self.exit_native_fullscreen() {
-                self.toggle_simple_fullscreen();
-            }
+        } else if !self.exit_native_fullscreen() {
+            self.toggle_simple_fullscreen();
         }
     }
 
@@ -1773,7 +1771,7 @@ impl Inner {
             // We treat that the same as the dead key disabled state:
             // we want to clock through a space keypress so that we clear
             // the state and output the original keypress.
-            let generate_space = !use_dead_keys || result.text.len() == 0;
+            let generate_space = !use_dead_keys || result.text.is_empty();
 
             if generate_space {
                 // synthesize a SPACE press to
@@ -2695,7 +2693,7 @@ impl WindowView {
                             // that last action.
                             if is_a_repeat {
                                 if let Some(event) =
-                                    inner.ime_last_event.as_ref().map(|e| e.clone())
+                                    inner.ime_last_event.clone()
                                 {
                                     inner.events.dispatch(WindowEvent::KeyEvent(event));
                                     return;
@@ -2930,7 +2928,7 @@ impl WindowView {
             // higher up the callstack already has a mutable
             // reference and we'd panic.
             let is_full_screen = inner.fullscreen.is_some()
-                || inner.window.as_ref().map_or(false, |window| {
+                || inner.window.as_ref().is_some_and(|window| {
                     let window = window.load();
                     let style_mask = unsafe { NSWindow::styleMask(*window) };
                     style_mask.contains(NSWindowStyleMask::NSFullScreenWindowMask)
@@ -2944,7 +2942,7 @@ impl WindowView {
             // wezterm-gui/src/termwindow/resize.rs.
             // <https://github.com/wezterm/wezterm/issues/3503>
             let is_zoomed = !is_full_screen
-                && inner.window.as_ref().map_or(false, |window| {
+                && inner.window.as_ref().is_some_and(|window| {
                     let window = window.load();
                     unsafe { msg_send![*window, isZoomed] }
                 });
@@ -3160,7 +3158,7 @@ impl WindowView {
         inner.borrow_mut().view_id.replace(view_id.weak());
 
         let view = Box::into_raw(Box::new(Self {
-            inner: Rc::clone(&inner),
+            inner: Rc::clone(inner),
         }));
 
         unsafe {

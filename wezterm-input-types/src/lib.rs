@@ -124,24 +124,24 @@ pub enum KeyCode {
 impl KeyCode {
     /// Return true if the key represents a modifier key.
     pub fn is_modifier(&self) -> bool {
-        match self {
+        matches!(
+            self,
             Self::Hyper
-            | Self::CapsLock
-            | Self::Super
-            | Self::Meta
-            | Self::Shift
-            | Self::LeftShift
-            | Self::RightShift
-            | Self::Control
-            | Self::LeftControl
-            | Self::RightControl
-            | Self::Alt
-            | Self::LeftAlt
-            | Self::RightAlt
-            | Self::LeftWindows
-            | Self::RightWindows => true,
-            _ => false,
-        }
+                | Self::CapsLock
+                | Self::Super
+                | Self::Meta
+                | Self::Shift
+                | Self::LeftShift
+                | Self::RightShift
+                | Self::Control
+                | Self::LeftControl
+                | Self::RightControl
+                | Self::Alt
+                | Self::LeftAlt
+                | Self::RightAlt
+                | Self::LeftWindows
+                | Self::RightWindows
+        )
     }
 
     pub fn normalize_shift(&self, modifiers: Modifiers) -> (KeyCode, Modifiers) {
@@ -450,6 +450,7 @@ impl TryFrom<&str> for KeyCode {
     }
 }
 
+#[allow(clippy::to_string_trait_impl)]
 impl ToString for KeyCode {
     fn to_string(&self) -> String {
         match self {
@@ -472,6 +473,7 @@ bitflags! {
     }
 }
 
+#[allow(clippy::to_string_trait_impl)]
 impl ToString for KeyboardLedStatus {
     fn to_string(&self) -> String {
         let mut s = String::new();
@@ -530,7 +532,7 @@ impl TryFrom<String> for Modifiers {
                 mods |= Modifiers::SUPER;
             } else if ele == "LEADER" {
                 mods |= Modifiers::LEADER;
-            } else if ele == "NONE" || ele == "" {
+            } else if ele == "NONE" || ele.is_empty() {
                 mods |= Modifiers::NONE;
             } else {
                 return Err(format!("invalid modifier name {} in {}", ele, s));
@@ -716,6 +718,7 @@ impl Modifiers {
     }
 }
 
+#[allow(clippy::to_string_trait_impl)]
 impl ToString for Modifiers {
     fn to_string(&self) -> String {
         self.to_string_with_separator(ModifierToStringArgs {
@@ -871,17 +874,17 @@ pub enum PhysKeyCode {
 
 impl PhysKeyCode {
     pub fn is_modifier(&self) -> bool {
-        match self {
+        matches!(
+            self,
             Self::LeftShift
-            | Self::LeftControl
-            | Self::LeftWindows
-            | Self::LeftAlt
-            | Self::RightShift
-            | Self::RightControl
-            | Self::RightWindows
-            | Self::RightAlt => true,
-            _ => false,
-        }
+                | Self::LeftControl
+                | Self::LeftWindows
+                | Self::LeftAlt
+                | Self::RightShift
+                | Self::RightControl
+                | Self::RightWindows
+                | Self::RightAlt
+        )
     }
 
     pub fn to_key_code(self) -> KeyCode {
@@ -1174,7 +1177,7 @@ impl PhysKeyCode {
     fn name_to_code(name: &str) -> Option<Self> {
         #[cfg(feature = "std")]
         {
-            return PHYSKEYCODE_MAP.get(name).copied();
+            PHYSKEYCODE_MAP.get(name).copied()
         }
         #[cfg(not(feature = "std"))]
         {
@@ -1191,10 +1194,11 @@ impl PhysKeyCode {
         }
     }
 
+    #[allow(clippy::wrong_self_convention)]
     fn to_name(&self) -> Option<String> {
         #[cfg(feature = "std")]
         {
-            return INV_PHYSKEYCODE_MAP.get(self).cloned();
+            INV_PHYSKEYCODE_MAP.get(self).cloned()
         }
         #[cfg(not(feature = "std"))]
         {
@@ -1230,6 +1234,7 @@ impl TryFrom<&str> for PhysKeyCode {
     }
 }
 
+#[allow(clippy::to_string_trait_impl)]
 impl ToString for PhysKeyCode {
     fn to_string(&self) -> String {
         if let Some(s) = self.to_name() {
@@ -1282,6 +1287,12 @@ pub struct MouseEvent {
 
 #[derive(Debug, Clone)]
 pub struct Handled(Arc<AtomicBool>);
+
+impl Default for Handled {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl Handled {
     pub fn new() -> Self {
@@ -1349,7 +1360,7 @@ impl RawKeyEvent {
             // PrintScreen => 57361,
             // Pause => 57362,
             // Menu => 57363,
-            Function(n) if n >= 13 && n <= 35 => 57376 + n as u32 - 13,
+            Function(n) if (13..=35).contains(&n) => 57376 + n as u32 - 13,
             Numpad(n) => n as u32 + 57399,
             Decimal => 57409,
             Divide => 57410,
@@ -2054,26 +2065,26 @@ bitflags! {
     }
 }
 
-impl Into<String> for &WindowDecorations {
-    fn into(self) -> String {
+impl From<&WindowDecorations> for String {
+    fn from(val: &WindowDecorations) -> Self {
         let mut s = vec![];
-        if self.contains(WindowDecorations::TITLE) {
+        if val.contains(WindowDecorations::TITLE) {
             s.push("TITLE");
         }
-        if self.contains(WindowDecorations::RESIZE) {
+        if val.contains(WindowDecorations::RESIZE) {
             s.push("RESIZE");
         }
-        if self.contains(WindowDecorations::INTEGRATED_BUTTONS) {
+        if val.contains(WindowDecorations::INTEGRATED_BUTTONS) {
             s.push("INTEGRATED_BUTTONS");
         }
-        if self.contains(WindowDecorations::MACOS_USE_BACKGROUND_COLOR_AS_TITLEBAR_COLOR) {
+        if val.contains(WindowDecorations::MACOS_USE_BACKGROUND_COLOR_AS_TITLEBAR_COLOR) {
             s.push("MACOS_USE_BACKGROUND_COLOR_AS_TITLEBAR_COLOR")
         }
-        if self.contains(WindowDecorations::MACOS_FORCE_ENABLE_SHADOW) {
+        if val.contains(WindowDecorations::MACOS_FORCE_ENABLE_SHADOW) {
             s.push("MACOS_FORCE_ENABLE_SHADOW");
-        } else if self.contains(WindowDecorations::MACOS_FORCE_DISABLE_SHADOW) {
+        } else if val.contains(WindowDecorations::MACOS_FORCE_DISABLE_SHADOW) {
             s.push("MACOS_FORCE_DISABLE_SHADOW");
-        } else if self.contains(WindowDecorations::MACOS_FORCE_SQUARE_CORNERS) {
+        } else if val.contains(WindowDecorations::MACOS_FORCE_SQUARE_CORNERS) {
             s.push("MACOS_FORCE_SQUARE_CORNERS");
         }
         if s.is_empty() {

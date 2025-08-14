@@ -52,6 +52,7 @@ impl<'a> PartialEq for (dyn ObjectKeyTrait + 'a) {
 
 impl<'a> Eq for (dyn ObjectKeyTrait + 'a) {}
 
+#[allow(clippy::non_canonical_partial_ord_impl)]
 impl<'a> PartialOrd for (dyn ObjectKeyTrait + 'a) {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         self.key().partial_cmp(&other.key())

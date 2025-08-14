@@ -70,7 +70,7 @@ pub enum InternalError {
 
     #[cfg(feature = "tmux_cc")]
     #[error(transparent)]
-    Pest(#[from] pest::error::Error<crate::tmux_cc::parser::Rule>),
+    Pest(#[from] Box<pest::error::Error<crate::tmux_cc::parser::Rule>>),
 
     #[error("{}", .context)]
     Context {

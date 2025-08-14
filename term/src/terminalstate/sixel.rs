@@ -7,6 +7,7 @@ use wezterm_cell::image::ImageDataType;
 use wezterm_escape_parser::{Sixel, SixelData};
 
 impl TerminalState {
+    #[allow(clippy::boxed_local)]
     pub(crate) fn sixel(&mut self, sixel: Box<Sixel>) {
         let (width, height) = sixel.dimensions();
 

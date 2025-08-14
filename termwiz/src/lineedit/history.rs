@@ -9,7 +9,7 @@ pub type HistoryIndex = usize;
 /// Defines the history interface for the line editor.
 pub trait History {
     /// Lookup the line corresponding to an index.
-    fn get(&self, idx: HistoryIndex) -> Option<Cow<str>>;
+    fn get(&self, idx: HistoryIndex) -> Option<Cow<'_, str>>;
     /// Return the index for the most recently added entry.
     fn last(&self) -> Option<HistoryIndex>;
     /// Add an entry.
@@ -24,7 +24,7 @@ pub trait History {
         style: SearchStyle,
         direction: SearchDirection,
         pattern: &str,
-    ) -> Option<SearchResult>;
+    ) -> Option<SearchResult<'_>>;
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -85,7 +85,7 @@ pub struct BasicHistory {
 }
 
 impl History for BasicHistory {
-    fn get(&self, idx: HistoryIndex) -> Option<Cow<str>> {
+    fn get(&self, idx: HistoryIndex) -> Option<Cow<'_, str>> {
         self.entries.get(idx).map(|s| Cow::Borrowed(s.as_str()))
     }
 
@@ -111,14 +111,11 @@ impl History for BasicHistory {
         style: SearchStyle,
         direction: SearchDirection,
         pattern: &str,
-    ) -> Option<SearchResult> {
+    ) -> Option<SearchResult<'_>> {
         let mut idx = idx;
 
         loop {
-            let line = match self.entries.get(idx) {
-                Some(line) => line,
-                None => return None,
-            };
+            let line = self.entries.get(idx)?;
 
             if let Some(cursor) = style.match_against(pattern, line) {
                 return Some(SearchResult {
@@ -128,10 +125,7 @@ impl History for BasicHistory {
                 });
             }
 
-            idx = match direction.next(idx) {
-                None => return None,
-                Some(idx) => idx,
-            };
+            idx = direction.next(idx)?;
         }
     }
 }

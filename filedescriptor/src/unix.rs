@@ -62,7 +62,7 @@ impl Drop for OwnedHandle {
 }
 
 impl std::os::fd::AsFd for OwnedHandle {
-    fn as_fd(&self) -> std::os::fd::BorrowedFd {
+    fn as_fd(&self) -> std::os::fd::BorrowedFd<'_> {
         unsafe { std::os::fd::BorrowedFd::borrow_raw(self.handle) }
     }
 }
@@ -201,6 +201,7 @@ impl OwnedHandle {
     }
 
     pub(crate) fn probe_handle_type(_handle: RawFileDescriptor) -> HandleType {
+        #[allow(clippy::unit_arg)]
         ()
     }
 }
@@ -231,7 +232,7 @@ impl std::io::Write for FileDescriptor {
 }
 
 impl std::os::fd::AsFd for FileDescriptor {
-    fn as_fd(&self) -> std::os::fd::BorrowedFd {
+    fn as_fd(&self) -> std::os::fd::BorrowedFd<'_> {
         self.handle.as_fd()
     }
 }
@@ -501,9 +502,9 @@ mod macos {
             Ok(())
         }
 
-        pub fn contains(&mut self, fd: RawFd) -> bool {
+        pub fn contains(&self, fd: RawFd) -> bool {
             check_fd(fd).unwrap();
-            unsafe { FD_ISSET(fd, &mut self.set) }
+            unsafe { FD_ISSET(fd, &self.set) }
         }
     }
 

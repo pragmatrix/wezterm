@@ -563,12 +563,13 @@ impl OneBased {
 
     /// Map a value from an escape sequence parameter.
     /// 0 is equivalent to 1
+    #[allow(clippy::result_unit_err)]
     pub fn from_esc_param(v: &CsiParam) -> core::result::Result<Self, ()> {
         match v {
             CsiParam::Integer(v) if *v == 0 => Ok(Self {
                 value: num_traits::one(),
             }),
-            CsiParam::Integer(v) if *v > 0 && *v <= i64::from(u32::max_value()) => {
+            CsiParam::Integer(v) if *v > 0 && *v <= i64::from(u32::MAX) => {
                 Ok(Self { value: *v as u32 })
             }
             _ => Err(()),
@@ -577,12 +578,11 @@ impl OneBased {
 
     /// Map a value from an escape sequence parameter.
     /// 0 is equivalent to max_value.
+    #[allow(clippy::result_unit_err)]
     pub fn from_esc_param_with_big_default(v: &CsiParam) -> core::result::Result<Self, ()> {
         match v {
-            CsiParam::Integer(v) if *v == 0 => Ok(Self {
-                value: u32::max_value(),
-            }),
-            CsiParam::Integer(v) if *v > 0 && *v <= i64::from(u32::max_value()) => {
+            CsiParam::Integer(v) if *v == 0 => Ok(Self { value: u32::MAX }),
+            CsiParam::Integer(v) if *v > 0 && *v <= i64::from(u32::MAX) => {
                 Ok(Self { value: *v as u32 })
             }
             _ => Err(()),
@@ -590,6 +590,7 @@ impl OneBased {
     }
 
     /// Map a value from an optional escape sequence parameter
+    #[allow(clippy::result_unit_err)]
     pub fn from_optional_esc_param(o: Option<&CsiParam>) -> core::result::Result<Self, ()> {
         Self::from_esc_param(o.unwrap_or(&CsiParam::Integer(1)))
     }

@@ -38,6 +38,7 @@ impl Direction {
     }
 }
 
+#[allow(clippy::upper_case_acronyms)]
 pub enum DirectionIter<I: DoubleEndedIterator<Item = T>, T> {
     LTR(I),
     RTL(core::iter::Rev<I>),

@@ -1,3 +1,4 @@
+#![allow(clippy::excessive_precision)]
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use core::hash::{Hash, Hasher};
@@ -185,7 +186,7 @@ fn linear_f32_to_srgb8_using_table(f: f32) -> u8 {
 fn linear_f32_to_srgb8(f: f32) -> u8 {
     #[cfg(feature = "std")]
     {
-        return linear_f32_to_srgb8_using_table(f);
+        linear_f32_to_srgb8_using_table(f)
     }
     #[cfg(not(feature = "std"))]
     {
@@ -197,7 +198,7 @@ fn linear_f32_to_srgb8(f: f32) -> u8 {
 fn srgb8_to_linear_f32(val: u8) -> f32 {
     #[cfg(feature = "std")]
     {
-        return unsafe { *SRGB_TO_F32_TABLE.get_unchecked(val as usize) };
+        unsafe { *SRGB_TO_F32_TABLE.get_unchecked(val as usize) }
     }
     #[cfg(not(feature = "std"))]
     {
@@ -436,7 +437,7 @@ impl SrgbaTuple {
     pub fn from_named(name: &str) -> Option<Self> {
         #[cfg(feature = "std")]
         {
-            return NAMED_COLORS.get(&name.to_ascii_lowercase()).cloned();
+            NAMED_COLORS.get(&name.to_ascii_lowercase()).cloned()
         }
         #[cfg(not(feature = "std"))]
         {
@@ -487,6 +488,7 @@ impl SrgbaTuple {
         )
     }
 
+    #[allow(clippy::inherent_to_string)]
     pub fn to_string(self) -> String {
         if self.3 == 1.0 {
             self.to_rgb_string()
@@ -739,7 +741,7 @@ fn x_parse_color_component(value: &str) -> Result<f32, ()> {
 
     for c in value.chars() {
         num_digits += 1;
-        component = component << 4;
+        component <<= 4;
 
         let nybble = match c.to_digit(16) {
             Some(v) => v as u16,
@@ -762,12 +764,13 @@ fn x_parse_color_component(value: &str) -> Result<f32, ()> {
 impl FromStr for SrgbaTuple {
     type Err = ();
 
+    #[allow(clippy::manual_strip)]
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         // Workaround <https://github.com/mazznoer/csscolorparser-rs/pull/7/files>
         if !s.is_ascii() {
             return Err(());
         }
-        if s.len() > 0 && s.as_bytes()[0] == b'#' {
+        if !s.is_empty() && s.as_bytes()[0] == b'#' {
             // Probably `#RGB`
 
             let digits = (s.len() - 1) / 3;
@@ -787,7 +790,7 @@ impl FromStr for SrgbaTuple {
                     let mut component = 0u16;
 
                     for _ in 0..digits {
-                        component = component << 4;
+                        component <<= 4;
 
                         let nybble = match chars.next().unwrap().to_digit(16) {
                             Some(v) => v as u16,
@@ -838,7 +841,7 @@ impl FromStr for SrgbaTuple {
                         Ok(v / 100.)
                     } else {
                         let v: f32 = s.parse().map_err(|_| ())?;
-                        if v > 255.0 || v < 0. {
+                        if !(0. ..=255.0).contains(&v) {
                             Err(())
                         } else {
                             Ok(v / 255.)
@@ -872,7 +875,7 @@ impl FromStr for SrgbaTuple {
                     let a = sat * light.min(1. - light);
                     let f = |n: f32| -> f32 {
                         let k = (n + hue / 30.) % 12.;
-                        light - a * (k - 3.).min(9. - k).min(1.).max(-1.)
+                        light - a * (k - 3.).min(9. - k).clamp(-1., 1.)
                     };
                     (f(0.), f(8.), f(4.))
                 }
@@ -1027,6 +1030,7 @@ impl LinearRgba {
         }
     }
 
+    #[allow(clippy::wrong_self_convention)]
     #[cfg(feature = "std")]
     fn to_oklaba(&self) -> [f32; 4] {
         let (r, g, b, alpha) = (self.0, self.1, self.2, self.3);
@@ -1085,10 +1089,8 @@ impl LinearRgba {
         let increased_ratio = reduced_col.contrast_ratio(other);
 
         // Prefer the reduced luminance version if the fg is dimmer than bg
-        if fg_lum < bg_lum {
-            if reduced_ratio >= min_ratio {
-                return Some(reduced_col);
-            }
+        if fg_lum < bg_lum && reduced_ratio >= min_ratio {
+            return Some(reduced_col);
         }
         // Otherwise, let's find a satisfactory alternative
         if increased_ratio >= min_ratio {

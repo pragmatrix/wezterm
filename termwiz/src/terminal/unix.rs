@@ -1,3 +1,4 @@
+#![allow(clippy::unused_io_amount)]
 use crate::render::RenderTty;
 use crate::terminal::ProbeCapabilities;
 use crate::{bail, Context, Result};
@@ -127,8 +128,7 @@ impl Write for TtyWriteHandle {
 
     fn flush(&mut self) -> std::result::Result<(), IoError> {
         self.flush_local_buffer()?;
-        self.drain()
-            .map_err(|e| IoError::new(ErrorKind::Other, format!("{}", e)))?;
+        self.drain().map_err(|e| IoError::other(format!("{}", e)))?;
         Ok(())
     }
 }
@@ -386,7 +386,7 @@ impl Terminal for UnixTerminal {
         })
     }
 
-    fn probe_capabilities(&mut self) -> Option<ProbeCapabilities> {
+    fn probe_capabilities(&mut self) -> Option<ProbeCapabilities<'_>> {
         Some(ProbeCapabilities::new(&mut self.read, &mut self.write))
     }
 

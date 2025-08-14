@@ -1,22 +1,20 @@
-/**
- * widechar_width.rs for Unicode 16.0.0
- * See https://github.com/ridiculousfish/widecharwidth/
- *
- * SHA1 file hashes:
- *  (
- *  the hashes for generate.py and the template are git object hashes,
- *  use `git log --all --find-object=<hash>` in the widecharwidth repository
- *  to see which commit they correspond to,
- *  or run `git hash-object` on the file to compare.
- *  The other hashes are simple `sha1sum` style hashes.
- *  )
- *
- *  generate.py:         2747bb9402d8eeeca8e566ff947f14308511ecb1
- *  template.js:         7921c1fe6bcb4ce17108929b599bfda097caedb7
- *  UnicodeData.txt:     91df83276154240bcedef82a09bde77aa182cf8d
- *  EastAsianWidth.txt:  0885c0fc1c21eb58954a3bfb785d78559b361d92
- *  emoji-data.txt:      1df2f8329dd9f5c238674807de736f316c6b9d87
- */
+//! widechar_width.rs for Unicode 16.0.0
+//! See https://github.com/ridiculousfish/widecharwidth/
+//!
+//! SHA1 file hashes:
+//! (
+//! the hashes for generate.py and the template are git object hashes,
+//! use `git log --all --find-object=<hash>` in the widecharwidth repository
+//! to see which commit they correspond to,
+//! or run `git hash-object` on the file to compare.
+//! The other hashes are simple `sha1sum` style hashes.
+//! )
+//!
+//! generate.py:         2747bb9402d8eeeca8e566ff947f14308511ecb1
+//! template.js:         7921c1fe6bcb4ce17108929b599bfda097caedb7
+//! UnicodeData.txt:     91df83276154240bcedef82a09bde77aa182cf8d
+//! EastAsianWidth.txt:  0885c0fc1c21eb58954a3bfb785d78559b361d92
+//! emoji-data.txt:      1df2f8329dd9f5c238674807de736f316c6b9d87
 
 type R = (u32, u32);
 
@@ -44,13 +42,13 @@ pub enum WcWidth {
 }
 
 /// Simple ASCII characters - used a lot, so we check them first.
-const ASCII_TABLE: &'static [R] = &[(0x00020, 0x0007E)];
+const ASCII_TABLE: &[R] = &[(0x00020, 0x0007E)];
 
 /// Private usage range.
-const PRIVATE_TABLE: &'static [R] = &[(0x0E000, 0x0F8FF), (0xF0000, 0xFFFFD), (0x100000, 0x10FFFD)];
+const PRIVATE_TABLE: &[R] = &[(0x0E000, 0x0F8FF), (0xF0000, 0xFFFFD), (0x100000, 0x10FFFD)];
 
 /// Nonprinting characters.
-const NONPRINT_TABLE: &'static [R] = &[
+const NONPRINT_TABLE: &[R] = &[
     (0x00000, 0x0001F),
     (0x0007F, 0x0009F),
     (0x000AD, 0x000AD),
@@ -78,7 +76,7 @@ const NONPRINT_TABLE: &'static [R] = &[
 ];
 
 /// Width 0 combining marks.
-const COMBINING_TABLE: &'static [R] = &[
+const COMBINING_TABLE: &[R] = &[
     (0x00300, 0x0036F),
     (0x00483, 0x00489),
     (0x00591, 0x005BD),
@@ -403,10 +401,10 @@ const COMBINING_TABLE: &'static [R] = &[
 ];
 
 /// Width 0 combining letters.
-const COMBININGLETTERS_TABLE: &'static [R] = &[(0x01160, 0x011FF), (0x0D7B0, 0x0D7FF)];
+const COMBININGLETTERS_TABLE: &[R] = &[(0x01160, 0x011FF), (0x0D7B0, 0x0D7FF)];
 
 /// Width 2 characters.
-const DOUBLEWIDE_TABLE: &'static [R] = &[
+const DOUBLEWIDE_TABLE: &[R] = &[
     (0x01100, 0x0115F),
     (0x02329, 0x0232A),
     (0x02630, 0x02637),
@@ -483,7 +481,7 @@ const DOUBLEWIDE_TABLE: &'static [R] = &[
 ];
 
 /// Ambiguous-width characters.
-const AMBIGUOUS_TABLE: &'static [R] = &[
+const AMBIGUOUS_TABLE: &[R] = &[
     (0x000A1, 0x000A1),
     (0x000A4, 0x000A4),
     (0x000A7, 0x000A8),
@@ -666,7 +664,7 @@ const AMBIGUOUS_TABLE: &'static [R] = &[
 ];
 
 /// Unassigned characters.
-const UNASSIGNED_TABLE: &'static [R] = &[
+const UNASSIGNED_TABLE: &[R] = &[
     (0x00378, 0x00379),
     (0x00380, 0x00383),
     (0x0038B, 0x0038B),
@@ -1421,7 +1419,7 @@ const UNASSIGNED_TABLE: &'static [R] = &[
 ];
 
 /// Non-characters.
-const NONCHAR_TABLE: &'static [R] = &[
+const NONCHAR_TABLE: &[R] = &[
     (0x0FDD0, 0x0FDEF),
     (0x0FFFE, 0x0FFFF),
     (0x1FFFE, 0x1FFFF),
@@ -1443,7 +1441,7 @@ const NONCHAR_TABLE: &'static [R] = &[
 ];
 
 /// Characters that were widened from width 1 to 2 in Unicode 9.
-const WIDENED_TABLE: &'static [R] = &[
+const WIDENED_TABLE: &[R] = &[
     (0x0231A, 0x0231B),
     (0x023E9, 0x023EC),
     (0x023F0, 0x023F0),
@@ -1527,34 +1525,34 @@ impl WcWidth {
     /// Return the width of character c
     pub fn from_char(c: char) -> Self {
         let c = c as u32;
-        if in_table(&ASCII_TABLE, c) {
+        if in_table(ASCII_TABLE, c) {
             return Self::One;
         }
-        if in_table(&PRIVATE_TABLE, c) {
+        if in_table(PRIVATE_TABLE, c) {
             return Self::PrivateUse;
         }
-        if in_table(&NONPRINT_TABLE, c) {
+        if in_table(NONPRINT_TABLE, c) {
             return Self::NonPrint;
         }
-        if in_table(&NONCHAR_TABLE, c) {
+        if in_table(NONCHAR_TABLE, c) {
             return Self::NonCharacter;
         }
-        if in_table(&COMBINING_TABLE, c) {
+        if in_table(COMBINING_TABLE, c) {
             return Self::Combining;
         }
-        if in_table(&COMBININGLETTERS_TABLE, c) {
+        if in_table(COMBININGLETTERS_TABLE, c) {
             return Self::Combining;
         }
-        if in_table(&DOUBLEWIDE_TABLE, c) {
+        if in_table(DOUBLEWIDE_TABLE, c) {
             return Self::Two;
         }
-        if in_table(&AMBIGUOUS_TABLE, c) {
+        if in_table(AMBIGUOUS_TABLE, c) {
             return Self::Ambiguous;
         }
-        if in_table(&UNASSIGNED_TABLE, c) {
+        if in_table(UNASSIGNED_TABLE, c) {
             return Self::Unassigned;
         }
-        if in_table(&WIDENED_TABLE, c) {
+        if in_table(WIDENED_TABLE, c) {
             return Self::WidenedIn9;
         }
         Self::One
@@ -1591,6 +1589,12 @@ impl WcWidth {
 /// it is resolved to)
 pub struct WcLookupTable {
     pub table: [WcWidth; 65536],
+}
+
+impl Default for WcLookupTable {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl WcLookupTable {
