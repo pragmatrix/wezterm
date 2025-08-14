@@ -1,3 +1,4 @@
+#![allow(clippy::drop_non_drop)]
 use crate::terminalstate::image::*;
 use crate::terminalstate::{ImageAttachParams, PlacementInfo};
 use crate::{StableRowIndex, TerminalState};

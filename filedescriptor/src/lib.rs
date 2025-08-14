@@ -1,3 +1,4 @@
+#![allow(clippy::missing_safety_doc)]
 //! The purpose of this crate is to make it a bit more ergonomic for portable
 //! applications that need to work with the platform level `RawFd` and
 //! `RawHandle` types.
@@ -217,6 +218,7 @@ impl OwnedHandle {
     /// The returned handle has a separate lifetime from the source, but
     /// references the same object at the kernel level.
     pub fn try_clone(&self) -> Result<Self> {
+        #[allow(clippy::unit_arg)]
         Self::dup_impl(self, self.handle_type)
     }
 
@@ -228,6 +230,7 @@ impl OwnedHandle {
     /// The returned handle has a separate lifetime from the source, but
     /// references the same object at the kernel level.
     pub fn dup<F: AsRawFileDescriptor>(f: &F) -> Result<Self> {
+        #[allow(clippy::unit_arg)]
         Self::dup_impl(f, Default::default())
     }
 }

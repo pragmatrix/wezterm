@@ -1,6 +1,7 @@
 use crate::bidi_class::BidiClass;
 use crate::level::{Level, MAX_DEPTH};
 
+#[allow(clippy::upper_case_acronyms)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub(crate) enum Override {
     Neutral,

@@ -23,7 +23,7 @@ pub use direction::Direction;
 pub use level::Level;
 
 /// Placeholder codepoint index that corresponds to NO_LEVEL
-const DELETED: usize = usize::max_value();
+const DELETED: usize = usize::MAX;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, FromDynamic, ToDynamic)]
 pub enum ParagraphDirectionHint {
@@ -110,7 +110,7 @@ impl BidiRun {
             type Item = usize;
             fn next(&mut self) -> Option<usize> {
                 for idx in self.range.by_ref() {
-                    if self.removed_by_x9.iter().any(|&i| i == idx) {
+                    if self.removed_by_x9.contains(&idx) {
                         // Skip it
                         continue;
                     }
@@ -363,6 +363,7 @@ impl BidiContext {
 
         // Initial visual order
         let mut visual = vec![];
+        #[allow(clippy::needless_range_loop)]
         for i in 0..levels.len() {
             if levels[i].removed_by_x9() {
                 visual.push(DELETED);
@@ -849,7 +850,7 @@ impl BidiContext {
                 // of the substring in this isolating run sequence
                 // enclosed by those brackets (inclusive
                 // of the brackets). Resolve that individual pair.
-                self.resolve_one_pair(pair, &iso_run);
+                self.resolve_one_pair(pair, iso_run);
             }
         }
     }
@@ -987,6 +988,7 @@ impl BidiContext {
             }
         }
 
+        #[allow(clippy::needless_return)]
         if strong_type_found {
             // First attempt to resolve direction by checking the prior context for
             // a strong type matching the opposite direction. N0 Step c1.
@@ -1268,7 +1270,7 @@ impl BidiContext {
             line_range: Range<usize>,
             base_level: Level,
             orig_char_types: &[BidiClass],
-            levels: &mut Vec<Level>,
+            levels: &mut [Level],
         ) {
             for i in line_range.rev() {
                 if orig_char_types[i] == BidiClass::WhiteSpace
@@ -1464,12 +1466,8 @@ impl BidiContext {
                         // Do nothing
                     } else if overflow_embedding > 0 {
                         overflow_embedding -= 1;
-                    } else {
-                        if !stack.isolate_status() {
-                            if stack.depth() >= 2 {
-                                stack.pop();
-                            }
-                        }
+                    } else if !stack.isolate_status() && stack.depth() >= 2 {
+                        stack.pop();
                     }
                 }
                 BidiClass::BoundaryNeutral => {}
@@ -1576,6 +1574,7 @@ impl BidiContext {
     ///   1. seqID = 0 (not yet assigned to an isolating run sequence)
     ///   2. its level matches the level we are processing
     ///   3. the first BIDIUNIT is a PDI
+    ///
     /// If all those conditions are met, assign that next level run
     /// to this isolating run sequence (set its seqID, and append to
     /// the list).
@@ -1715,22 +1714,22 @@ impl BidiContext {
 
 impl BidiClass {
     pub fn is_iso_init(self) -> bool {
-        match self {
+        matches!(
+            self,
             BidiClass::RightToLeftIsolate
-            | BidiClass::LeftToRightIsolate
-            | BidiClass::FirstStrongIsolate => true,
-            _ => false,
-        }
+                | BidiClass::LeftToRightIsolate
+                | BidiClass::FirstStrongIsolate
+        )
     }
 
     pub fn is_iso_control(self) -> bool {
-        match self {
+        matches!(
+            self,
             BidiClass::RightToLeftIsolate
-            | BidiClass::LeftToRightIsolate
-            | BidiClass::PopDirectionalIsolate
-            | BidiClass::FirstStrongIsolate => true,
-            _ => false,
-        }
+                | BidiClass::LeftToRightIsolate
+                | BidiClass::PopDirectionalIsolate
+                | BidiClass::FirstStrongIsolate
+        )
     }
 
     pub fn is_neutral(self) -> bool {
@@ -1767,6 +1766,7 @@ impl Run {
         types: &[BidiClass],
         levels: &[Level],
     ) -> Option<BidiClass> {
+        #[allow(clippy::needless_range_loop)]
         for idx in self.start..self.end {
             if !levels[idx].removed_by_x9() {
                 return types.get(idx).cloned();

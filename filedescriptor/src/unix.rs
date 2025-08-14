@@ -201,6 +201,7 @@ impl OwnedHandle {
     }
 
     pub(crate) fn probe_handle_type(_handle: RawFileDescriptor) -> HandleType {
+        #[allow(clippy::unit_arg)]
         ()
     }
 }
@@ -501,9 +502,9 @@ mod macos {
             Ok(())
         }
 
-        pub fn contains(&mut self, fd: RawFd) -> bool {
+        pub fn contains(&self, fd: RawFd) -> bool {
             check_fd(fd).unwrap();
-            unsafe { FD_ISSET(fd, &mut self.set) }
+            unsafe { FD_ISSET(fd, &self.set) }
         }
     }
 
