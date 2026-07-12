@@ -1187,13 +1187,6 @@ impl InputParser {
         );
 
         map.insert(
-            [b'\r'],
-            InputEvent::Key(KeyEvent {
-                key: KeyCode::Enter,
-                modifiers: Modifiers::NONE,
-            }),
-        );
-        map.insert(
             b"\r",
             InputEvent::Key(KeyEvent {
                 key: KeyCode::Enter,
@@ -1400,7 +1393,7 @@ impl InputParser {
                                 }),
                             ),
                             _,
-                                b"\n",
+                        ) => {
                             self.state = InputState::EscapeMaybeAlt;
                             self.buf.advance(len);
                         }
