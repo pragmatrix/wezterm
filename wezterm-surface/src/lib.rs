@@ -515,7 +515,7 @@ impl Surface {
     }
 
     pub fn screen_lines(&self) -> Vec<Cow<'_, Line>> {
-        self.lines.iter().map(|line| Cow::Borrowed(line)).collect()
+        self.lines.iter().map(Cow::Borrowed).collect()
     }
 
     /// Returns a stream of changes suitable to update the screen

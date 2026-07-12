@@ -203,9 +203,8 @@ impl<'term> LineEditor<'term> {
             let x = (cursor_x + delta) % screen_cols;
 
             let row = cursor_y + y as isize;
-            let col = x.max(0);
 
-            (col, row)
+            (x, row)
         }
         let cursor_position = compute_cursor_after_printing_x_columns(
             cursor_position_after_printing_prompt.0,

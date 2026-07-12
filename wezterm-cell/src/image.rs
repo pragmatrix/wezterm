@@ -576,6 +576,10 @@ impl ImageData {
         }
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
     pub fn data(&self) -> MutexGuard<'_, ImageDataType> {
         self.data.lock().unwrap()
     }
