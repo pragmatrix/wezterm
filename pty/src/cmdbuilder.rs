@@ -205,6 +205,8 @@ pub struct CommandBuilder {
     envs: BTreeMap<OsString, EnvEntry>,
     cwd: Option<OsString>,
     #[cfg(unix)]
+    inherited_fds: Vec<std::os::fd::RawFd>,
+    #[cfg(unix)]
     pub(crate) umask: Option<libc::mode_t>,
     controlling_tty: bool,
 }
@@ -218,6 +220,8 @@ impl CommandBuilder {
             envs: get_base_env(),
             cwd: None,
             #[cfg(unix)]
+            inherited_fds: vec![],
+            #[cfg(unix)]
             umask: None,
             controlling_tty: true,
         }
@@ -229,6 +233,8 @@ impl CommandBuilder {
             args,
             envs: get_base_env(),
             cwd: None,
+            #[cfg(unix)]
+            inherited_fds: vec![],
             #[cfg(unix)]
             umask: None,
             controlling_tty: true,
@@ -256,6 +262,8 @@ impl CommandBuilder {
             args: vec![],
             envs: get_base_env(),
             cwd: None,
+            #[cfg(unix)]
+            inherited_fds: vec![],
             #[cfg(unix)]
             umask: None,
             controlling_tty: true,
@@ -421,6 +429,15 @@ impl CommandBuilder {
 
 #[cfg(unix)]
 impl CommandBuilder {
+    /// Keep a file descriptor open when spawning the command.
+    pub fn inherit_fd(&mut self, fd: std::os::fd::RawFd) {
+        self.inherited_fds.push(fd);
+    }
+
+    pub(crate) fn inherited_fds(&self) -> &[std::os::fd::RawFd] {
+        &self.inherited_fds
+    }
+
     pub fn umask(&mut self, mask: Option<libc::mode_t>) {
         self.umask = mask;
     }

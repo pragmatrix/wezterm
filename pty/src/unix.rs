@@ -149,7 +149,7 @@ fn tty_name(fd: RawFd) -> Option<PathBuf> {
 /// The implementation of this function relies on `/dev/fd` being available
 /// to provide the list of open fds.  Any errors in enumerating or closing
 /// the fds are silently ignored.
-pub fn close_random_fds() {
+pub fn close_random_fds(except: &[RawFd]) {
     // FreeBSD, macOS and presumably other BSDish systems have /dev/fd as
     // a directory listing the current fd numbers for the process.
     //
@@ -169,8 +169,10 @@ pub fn close_random_fds() {
             }
         }
         for fd in fds {
-            unsafe {
-                libc::close(fd);
+            if !except.contains(&fd) {
+                unsafe {
+                    libc::close(fd);
+                }
             }
         }
     }
@@ -227,6 +229,7 @@ impl PtyFd {
 
     fn spawn_command(&self, builder: CommandBuilder) -> anyhow::Result<std::process::Child> {
         let configured_umask = builder.umask;
+        let inherited_fds = builder.inherited_fds().to_vec();
 
         let mut cmd = builder.as_command()?;
         let controlling_tty = builder.get_controlling_tty();
@@ -273,7 +276,19 @@ impl PtyFd {
                         }
                     }
 
-                    close_random_fds();
+                    for fd in &inherited_fds {
+                        // The descriptor must remain open after exec so the child can use the
+                        // descriptor number passed through its environment.
+                        let flags = libc::fcntl(*fd, libc::F_GETFD);
+                        if flags == -1 {
+                            return Err(io::Error::last_os_error());
+                        }
+                        if libc::fcntl(*fd, libc::F_SETFD, flags & !libc::FD_CLOEXEC) == -1 {
+                            return Err(io::Error::last_os_error());
+                        }
+                    }
+
+                    close_random_fds(&inherited_fds);
 
                     if let Some(mask) = configured_umask {
                         libc::umask(mask);
