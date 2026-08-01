@@ -950,6 +950,21 @@ impl Screen {
         func(&lines)
     }
 
+    pub fn extend_phys_lines(&self, phys_range: Range<PhysRowIndex>, result: &mut Vec<Line>) {
+        let (first, second) = self.lines.as_slices();
+        let first_len = first.len();
+        let first_range = phys_intersection(&(0..first.len()), &phys_range);
+        let second_range = phys_intersection(&(first.len()..first.len() + second.len()), &phys_range);
+
+        result.extend(first[first_range].iter().cloned());
+        result.extend(
+            second[second_range.start.saturating_sub(first_len)
+                ..second_range.end.saturating_sub(first_len)]
+                .iter()
+                .cloned(),
+        );
+    }
+
     pub fn with_phys_lines_mut<F>(&mut self, phys_range: Range<PhysRowIndex>, mut func: F)
     where
         F: FnMut(&mut [&mut Line]),
