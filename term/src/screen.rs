@@ -960,7 +960,8 @@ impl Screen {
         let (first, second) = self.lines.as_slices();
         let first_len = first.len();
         let first_range = phys_intersection(&(0..first.len()), &phys_range);
-        let second_range = phys_intersection(&(first.len()..first.len() + second.len()), &phys_range);
+        let second_range =
+            phys_intersection(&(first.len()..first.len() + second.len()), &phys_range);
 
         result.extend(first[first_range].iter().cloned());
         result.extend(
