@@ -58,6 +58,7 @@ fn emit_classify_table() {
     let table = WcLookupTable::new();
     println!("use crate::widechar_width::{{WcLookupTable, WcWidth}};");
     println!();
+    println!("#[allow(clippy::large_const_arrays)]");
     println!("pub const WCWIDTH_TABLE: WcLookupTable = WcLookupTable {{");
     println!("  table: [");
 
