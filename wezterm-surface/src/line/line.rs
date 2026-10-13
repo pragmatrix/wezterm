@@ -201,6 +201,10 @@ impl Line {
         self.update_last_change_seqno(seqno);
         self.invalidate_zones();
         self.bits = LineBits::NONE;
+        // Scrolling recycles lines through here; a recycled line must not keep the identity the
+        // application attached to its previous content.
+        #[cfg(feature = "appdata")]
+        self.clear_appdata();
     }
 
     pub fn resize(&mut self, width: usize, seqno: SequenceNo) {
