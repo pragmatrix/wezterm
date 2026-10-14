@@ -835,6 +835,14 @@ impl TerminalState {
         Ok(())
     }
 
+    /// Send input the embedder encoded itself, such as Kitty keyboard protocol keys. It goes
+    /// through the terminal's writer, so it stays ordered with pastes, keys and replies.
+    pub fn send_bytes(&mut self, bytes: &[u8]) -> Result<(), Error> {
+        self.writer.write_all(bytes)?;
+        self.writer.flush()?;
+        Ok(())
+    }
+
     /// Informs the terminal that the viewport of the window has resized to the
     /// specified dimensions.
     /// We need to resize both the primary and alt screens, adjusting
