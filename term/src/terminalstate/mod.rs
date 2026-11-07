@@ -26,6 +26,7 @@ use wezterm_escape_parser::csi::{
 use wezterm_escape_parser::{OneBased, OperatingSystemCommand, CSI};
 use wezterm_surface::{CursorShape, CursorVisibility, SequenceNo};
 
+mod commands;
 mod image;
 mod iterm;
 mod keyboard;
@@ -35,6 +36,8 @@ pub(crate) mod performer;
 mod sixel;
 use crate::terminalstate::image::*;
 use crate::terminalstate::kitty::*;
+
+pub use commands::{CommandState, FinishedCommand, ShellCommands, StablePosition};
 
 lazy_static::lazy_static! {
     static ref DB: Database = {
@@ -250,6 +253,9 @@ pub struct TerminalState {
     wrap_next: bool,
 
     clear_semantic_attribute_on_newline: bool,
+
+    /// The shell's commands, recorded from the OSC 133 markers.
+    shell_commands: ShellCommands,
 
     /// If true, writing a character inserts a new cell
     insert: bool,
@@ -512,6 +518,7 @@ impl TerminalState {
             left_and_right_margin_mode: false,
             wrap_next: false,
             clear_semantic_attribute_on_newline: false,
+            shell_commands: ShellCommands::default(),
             // We default auto wrap to true even though the default for
             // a dec terminal is false, because it is more useful this way.
             dec_auto_wrap: true,
@@ -581,6 +588,19 @@ impl TerminalState {
 
     pub fn current_seqno(&self) -> SequenceNo {
         self.seqno
+    }
+
+    /// The shell's commands, as far as its OSC 133 markers told them.
+    pub fn shell_commands(&self) -> &ShellCommands {
+        &self.shell_commands
+    }
+
+    /// The cursor's position in the stable rows of the active screen.
+    fn cursor_stable_position(&self) -> StablePosition {
+        StablePosition {
+            row: self.screen().visible_row_to_stable_row(self.cursor.y),
+            column: self.cursor.x,
+        }
     }
 
     pub fn increment_seqno(&mut self) {
@@ -692,6 +712,12 @@ impl TerminalState {
     /// the alternate screen).
     pub fn screen_mut(&mut self) -> &mut Screen {
         &mut self.screen
+    }
+
+    /// Returns a reference to the primary screen, which holds the scrollback and the shell's
+    /// commands, also while the alternate screen is active.
+    pub fn primary_screen(&self) -> &Screen {
+        &self.screen.screen
     }
 
     fn set_clipboard_contents(

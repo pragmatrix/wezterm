@@ -864,15 +864,21 @@ impl<'a> Performer<'a> {
             ) => {
                 self.fresh_line();
                 self.pen.set_semantic_type(SemanticType::Prompt);
+                let (cursor, seqno) = (self.cursor_stable_position(), self.seqno);
+                self.shell_commands.prompt_started(cursor, seqno);
             }
             OperatingSystemCommand::FinalTermSemanticPrompt(
                 FinalTermSemanticPrompt::StartPrompt(_),
             ) => {
                 self.pen.set_semantic_type(SemanticType::Prompt);
+                self.shell_commands.prompt_continued();
             }
             OperatingSystemCommand::FinalTermSemanticPrompt(
                 FinalTermSemanticPrompt::MarkEndOfCommandWithFreshLine { .. },
             ) => {
+                // The command's output ends before the fresh line.
+                let (cursor, seqno) = (self.cursor_stable_position(), self.seqno);
+                self.shell_commands.prompt_started(cursor, seqno);
                 self.fresh_line();
                 self.pen.set_semantic_type(SemanticType::Prompt);
             }
@@ -880,22 +886,31 @@ impl<'a> Performer<'a> {
                 FinalTermSemanticPrompt::MarkEndOfPromptAndStartOfInputUntilNextMarker,
             ) => {
                 self.pen.set_semantic_type(SemanticType::Input);
+                let cursor = self.cursor_stable_position();
+                self.shell_commands.input_started(cursor);
             }
             OperatingSystemCommand::FinalTermSemanticPrompt(
                 FinalTermSemanticPrompt::MarkEndOfPromptAndStartOfInputUntilEndOfLine,
             ) => {
                 self.pen.set_semantic_type(SemanticType::Input);
                 self.clear_semantic_attribute_on_newline = true;
+                let cursor = self.cursor_stable_position();
+                self.shell_commands.input_started(cursor);
             }
             OperatingSystemCommand::FinalTermSemanticPrompt(
                 FinalTermSemanticPrompt::MarkEndOfInputAndStartOfOutput { .. },
             ) => {
                 self.pen.set_semantic_type(SemanticType::Output);
+                let cursor = self.cursor_stable_position();
+                self.shell_commands.output_started(cursor);
             }
 
             OperatingSystemCommand::FinalTermSemanticPrompt(
-                FinalTermSemanticPrompt::CommandStatus { .. },
-            ) => {}
+                FinalTermSemanticPrompt::CommandStatus { status, .. },
+            ) => {
+                let (cursor, seqno) = (self.cursor_stable_position(), self.seqno);
+                self.shell_commands.command_finished(status, cursor, seqno);
+            }
 
             OperatingSystemCommand::SystemNotification(message) => {
                 if let Some(handler) = self.alert_handler.as_mut() {
