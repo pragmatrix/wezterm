@@ -37,3 +37,6 @@ use_image = ["wezterm-cell/use_image"] # "image", "dep:image", "wezterm-escape-p
 [dev-dependencies]
 k9.workspace = true
 
+
+# mt makes this crate a member of its workspace. An empty table opts out of mt's workspace lints.
+[lints]

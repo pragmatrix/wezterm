@@ -90,3 +90,6 @@ rustdoc-args = ["--cfg", "feature=\"docs\""]
 name = "cell"
 harness = false
 
+
+# mt makes this crate a member of its workspace. An empty table opts out of mt's workspace lints.
+[lints]

@@ -45,3 +45,6 @@ k9.workspace = true
 [dependencies.termwiz]
 workspace = true
 features = ["use_image"]
+
+# mt makes this crate a member of its workspace. An empty table opts out of mt's workspace lints.
+[lints]

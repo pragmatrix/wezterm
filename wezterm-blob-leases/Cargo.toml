@@ -20,3 +20,6 @@ uuid = {workspace=true, features=["v4", "rng"]}
 default = []
 serde = ["dep:serde", "uuid/serde"]
 simple_tempdir = ["dep:tempfile"]
+
+# mt makes this crate a member of its workspace. An empty table opts out of mt's workspace lints.
+[lints]

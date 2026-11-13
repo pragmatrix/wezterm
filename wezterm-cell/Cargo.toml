@@ -30,3 +30,6 @@ use_image = ["dep:image", "dep:wezterm-blob-leases", "dep:log", "dep:ordered-flo
 
 [dev-dependencies]
 
+
+# mt makes this crate a member of its workspace. An empty table opts out of mt's workspace lints.
+[lints]

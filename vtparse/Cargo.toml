@@ -22,3 +22,6 @@ utf8parse.workspace = true
 
 [dev-dependencies]
 k9.workspace = true
+
+# mt makes this crate a member of its workspace. An empty table opts out of mt's workspace lints.
+[lints]
