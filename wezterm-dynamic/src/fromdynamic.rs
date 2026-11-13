@@ -246,6 +246,9 @@ impl FromDynamic for String {
 macro_rules! int {
     ($($ty:ty),* $(,)?) => {
         $(
+// Converting into the same type, such as `i64` from `Value::I64`, cannot fail, so the error
+// branch is unreachable for that type and reachable for the others.
+#[allow(unreachable_code)]
 impl FromDynamic for $ty {
     fn from_dynamic(value: &Value, _options: FromDynamicOptions) -> Result<Self, Error> {
         match value {
